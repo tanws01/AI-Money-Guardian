@@ -1,12 +1,14 @@
 {
   "name": "ai-money-guardian",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Privacy-first AI spending guardian built with Terminal 3 T3N ADK.",
   "scripts": {
     "dev": "tsx server.ts",
-    "start": "node --import tsx server.ts"
+    "start": "node --import tsx server.ts",
+    "t3n:deploy": "tsx scripts/t3n-deploy-policy.ts",
+    "t3n:pay": "tsx scripts/t3n-protected-payment.ts"
   },
   "dependencies": {
     "@terminal3/t3n-sdk": "^5.10.0",
