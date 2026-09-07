@@ -11,21 +11,56 @@ The product loop is:
 ## What exists now
 
 - ✦ **Financial Intelligence Hub** — import a CSV bank statement and derive cashflow, spending categories, net cashflow, savings rate, recurring-spend estimates and a financial-health score.
-- ◈ **Natural-language Money Q&A** — ask questions such as “Where am I spending the most?” or “Can I save RM1,000 a month?” and receive model-backed answers with confidence/evidence metadata.
-- 🛡 **Guardian Desk** — explainable purchase decisions with safe-spend, commitment, emergency-buffer and category-risk checks.
+- ◈ **Natural-language Money Q&A** — ask questions and receive model-backed answers with confidence/evidence metadata.
+- 🛡 **Guardian Desk** — explainable purchase decisions with policy checks.
 - ◉ **Money Health** — a living view of income, expenses, surplus and runway.
 - ◎ **Goal Engine** — goal-aware financial planning foundation.
 - ◇ **Life Simulator** — stress-test major life decisions.
-- 🚨 **Scam Guard** — detect social-engineering signals in suspicious messages.
-- 🔐 **Agent Control** — verifiable T3N identity, explicit permissions and blocked sensitive actions.
-- 📜 **Auditability** — every decision/action response receives an audit identifier and agent metadata.
-- 🧬 **Privacy boundary** — raw statement records can be processed to create a derived model; the demo does not persist uploaded statement files.
+- 🚨 **Scam Guard** — detect social-engineering signals.
+- 🔐 **Agent Control** — T3N identity, explicit permissions and blocked sensitive actions.
+- ◈ **T3N Command Center** — makes the ADK trust layer visible: identity, TEE session, usage telemetry, policy preflight, delegation/revocation concepts and Agent Connect readiness.
 
-## The product thesis
+## T3N ADK showcase
+
+The product is intentionally designed to demonstrate the parts of T3N that matter for an autonomous financial agent.
+
+### 1. Agent Auth — prove who the agent is
+
+When `T3N_API_KEY` is configured, the server uses the T3N SDK to establish a session, perform the handshake and authenticate the Guardian to obtain a `did:t3n` identity. The UI displays the authenticated DID and can verify it against `T3N_DID`.
+
+### 2. TEE session — establish a protected execution boundary
+
+The live status panel exposes whether the T3N session was established. The application does not claim that local financial computations are automatically inside a TEE; protected computation requires the appropriate T3N contract/workflow.
+
+### 3. Usage telemetry — make the T3N runtime observable
+
+When the installed SDK exposes `getUsage()`, the Command Center shows available/reserved testnet credits and credit-exhaustion state.
+
+### 4. Policy preflight — stop an action before it leaves the boundary
+
+The Guardian runs an explicit preflight over identity, consent, amount and category policy. A sensitive action such as `bank.transfer` is visibly blocked unless the required authorization path exists.
+
+### 5. Least privilege — give the agent only what it needs
+
+The product models scoped functions, allowed actions/hosts, user consent and revocation. This follows T3N's delegation model rather than giving a financial agent blanket access.
+
+### 6. Agent Connect — prepare the path to protected commerce
+
+The UI exposes the intended pipeline:
+
+**Signed intent → Agent Auth → policy → TEE placeholder resolution → protected execution → audit receipt**
+
+The current release does **not** fake a payment or fake a ledger receipt. A real protected-contract integration must be configured before execution can be claimed.
+
+### 7. Auditability — distinguish local evidence from T3N ledger evidence
+
+Every demo decision/action gets a local audit ID. When a real protected T3N contract is integrated, the architecture is ready to attach the resulting protected execution receipt instead of inventing one.
+
+## Product thesis
 
 **An AI should not need to know everything about you to help protect your money.**
 
-Guardian separates the **private financial model** from the **decision layer**. The long-term architecture is designed so an agent can prove facts such as “commitments are below policy threshold” or “this purchase would break my emergency-fund rule” without unnecessarily exposing a user's full financial history.
+Guardian separates the **private financial model** from the **decision/action layer**. The long-term design is for an agent to prove facts such as “this purchase exceeds my policy” or “my emergency reserve remains protected” without unnecessarily exposing a user's full financial history.
 
 ## Architecture
 
@@ -33,15 +68,14 @@ Guardian separates the **private financial model** from the **decision layer**. 
                          AI MONEY GUARDIAN
                                   │
        ┌──────────────────────────┼──────────────────────────┐
-       │                          │                          │
        ▼                          ▼                          ▼
- PRIVATE MONEY MODEL         GUARDIAN REASONING          AGENT CONTROL
+ PRIVATE MONEY MODEL         GUARDIAN REASONING          T3N TRUST LAYER
        │                          │                          │
- Transactions              Natural language             T3N identity
- Categories                 Decisions                    Consent
- Cashflow                   Goals                        Permissions
- Recurring spend            Simulations                  Audit
- Forecasts                  Risk                         Policy
+ Transactions              Natural language             Agent Auth / DID
+ Categories                 Decisions                    TEE Session
+ Cashflow                   Goals                        Policy / Consent
+ Recurring spend            Simulations                  Secrets boundary
+ Forecasts                  Risk                         Audit / Connect
        │                          │                          │
        └───────────────┬──────────┴───────────┬──────────────┘
                        ▼                      ▼
@@ -52,27 +86,13 @@ Guardian separates the **private financial model** from the **decision layer**. 
                        future TEE workflows
 ```
 
-## Privacy model
-
-### Current alpha
-
-- CSV is selected and parsed in the browser.
-- Parsed transactions are sent to the local server to calculate a financial model.
-- The demo server does not write uploaded statements to persistent storage.
-- Browser local storage can retain the parsed demo model for convenience; users should clear it before using sensitive data.
-- T3N API credentials stay server-side.
-
-### Production direction
-
-A real release should move the private model into authenticated, encrypted storage and/or a protected computation environment, with explicit consent scopes, deletion/export controls, data minimization, key management and security review.
-
 ## Intelligence roadmap
 
 ### Layer 1 — Financial understanding
-- CSV / bank-statement ingestion
+- Statement ingestion
 - Transaction normalization
 - Merchant/category classification
-- Income and expense detection
+- Income/expense detection
 - Recurring-payment detection
 - Cashflow model
 - Savings-rate model
@@ -84,10 +104,10 @@ A real release should move the private model into authenticated, encrypted stora
 - Affordability decisions
 - Goal-aware recommendations
 - Scenario simulation
-- Cashflow forecasting
+- Forecasting
 - “What changed?” explanations
 - “What should I do next?” planning
-- Confidence and evidence display
+- Confidence and evidence
 
 ### Layer 3 — Continuous Guardian
 - New-transaction monitoring
@@ -99,60 +119,48 @@ A real release should move the private model into authenticated, encrypted stora
 - Upcoming-bill awareness
 - Monthly financial reviews
 
-### Layer 4 — Security Guardian
+### Layer 4 — T3N-secured agent
 - Verifiable agent identity
 - Capability-scoped permissions
-- User consent receipts
+- Consent receipts
 - Policy engine
 - Human approval gates
 - Protected secrets
+- Protected computation
 - Tamper-evident audit records
 - Agent-to-agent trust
 
 ### Layer 5 — Autonomous money workflows
-- Prepare bills for approval
-- Prepare savings transfers
+- Bill preparation
+- Savings-transfer preparation
 - Subscription cancellation workflows
 - Payment-intent preparation
 - Renewal reminders
-- Negotiation/recommendation workflows
 - Multi-step financial tasks with explicit approval checkpoints
+- Agent Connect protected execution
 
-**Important:** the current `/api/action` is intentionally a permission gate/demo. It does not execute real payments. Production execution requires provider integration, strong authentication, transaction signing, policy enforcement, risk controls and independent security/compliance review.
+**Important:** `/api/action` and `/api/t3/preflight` are intentionally safety gates/demo infrastructure. They do not execute real payments. Production execution requires provider integration, strong authentication, transaction signing, risk controls, policy enforcement and independent security/compliance review.
 
-## T3N integration
+## Privacy model
 
-The server uses the Terminal 3 T3N SDK for testnet agent authentication. When configured, it performs a handshake, authenticates the agent and receives a `did:t3n` identity. The expected DID can be checked through `T3N_DID`.
+### Current alpha
 
-The repository does **not** claim that every current computation is already TEE-protected. Deeper TEE-backed private data maps, protected policy execution and production audit workflows remain part of the next security layer.
+- CSV is selected and parsed in the browser.
+- Parsed transactions are sent to the local server to calculate a financial model.
+- The demo server does not write uploaded statements to persistent storage.
+- Browser local storage can retain parsed transactions for convenience; clear it before sensitive testing.
+- T3N API credentials stay server-side.
 
-## Example user journey
+### Production direction
 
-```text
-User uploads August statement
-          ↓
-Guardian builds financial model
-          ↓
-Health: 81/100 · Net: RM3,420 · Top spend: food
-          ↓
-User: “Can I afford a RM3,500 Japan trip?”
-          ↓
-Guardian checks cashflow + reserve + goals
-          ↓
-CAUTION: possible, but emergency reserve would fall below target
-          ↓
-User: “What should I change?”
-          ↓
-Guardian identifies food + shopping pressure
-          ↓
-User approves a savings goal
-          ↓
-Agent prepares an action intent
-          ↓
-T3N identity + permission + user consent + policy gate
-          ↓
-Human approval required before sensitive execution
-```
+Move the private model into authenticated encrypted storage and/or protected TEE computation with explicit consent scopes, deletion/export controls, data minimization, jurisdiction controls, key management and security review.
+
+## Official T3N references
+
+- T3N Sandbox / Agent Developer Kit: https://terminal3.io/products/agent-developer-kit
+- T3 Network: https://terminal3.io/products/t3n
+- T3N delegate access: https://docs.terminal3.io/t3n/data-owner-guide/delegate-access
+- T3N overview: https://docs.terminal3.io/t3n/overview/why-t3n
 
 ## Run locally
 
