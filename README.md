@@ -1,200 +1,132 @@
 # AI Money Guardian 🛡️
 
-> **Your money doesn't need another budgeting app. It needs a bouncer.**
+> **Your money. Your rules. Your AI.**
 
-AI Money Guardian is a privacy-first AI agent that answers a simple question: **“Can I afford this?”**
+AI Money Guardian is a privacy-first financial agent designed to become a **trust layer between people, AI agents and money**.
 
-Instead of handing an AI your salary, bank account, and transaction history, the Guardian works with a small set of **selectively disclosed financial attributes** — such as an income band, commitment ratio, and safe-spend limit — and returns an auditable spending decision.
+It starts with “Can I afford this?” and expands into money health, goals, life-decision simulation, scam detection and financial-agent security.
 
-Built as a hackathon prototype with the **Terminal 3 Agent Developer Kit (T3N ADK)**.
+## Product modules
 
-## Why this matters
+- ✦ **Guardian Desk** — explainable purchase decisions.
+- ◉ **Money Health** — financial health and spending pressure.
+- ◎ **Goal Engine** — turn savings goals into monthly plans.
+- ◇ **Life Simulator** — explore moving out, buying a car, holidays and career decisions.
+- 🛡 **Security Center** — agent identity, permissions and action boundaries.
+- 🚨 **Scam Guard** — detect social-engineering signals in suspicious messages.
+- 📜 **Auditability** — timestamped decision and agent metadata.
+- 🔐 **Selective disclosure** — use derived attributes instead of exposing raw financial records where possible.
 
-Most financial assistants assume more data = better advice. AI Money Guardian explores the opposite idea:
+## Product principle
 
-**Give the agent less data, but make the data useful and verifiable.**
+**An AI should not need to know everything about you to help protect your money.**
 
-A user can disclose:
+The current prototype uses derived attributes such as income band, commitment ratio, safe-spend limit and emergency-fund target. It deliberately keeps exact salary, bank-account details, raw transaction history and identity numbers outside the decision payload.
 
-- Income band: `RM4k–RM6k`
-- Commitment ratio: `40%`
-- Safe-spend limit: `RM1,200`
+This is a privacy/product architecture principle, not a claim that every future feature can operate without underlying financial data.
 
-While keeping these hidden:
-
-- Exact salary
-- Bank account details
-- Identity number
-- Full transaction history
-
-The agent can still make a simple policy decision.
-
-## Demo
-
-Try these examples:
-
-| Purchase | Amount | Result |
-|---|---:|---|
-| iPhone 17 Pro | RM4,999 | 🔴 DENIED |
-| Headphones | RM500 | 🟢 APPROVED |
-| Dinner | RM80 | 🟢 APPROVED |
-
-The demo policy is intentionally simple:
+## Architecture
 
 ```text
-purchaseAmount <= safeSpendLimit
-AND
-commitmentRatio < 60%
+                         AI MONEY GUARDIAN
+                                  │
+             ┌────────────────────┼────────────────────┐
+             │                    │                    │
+             ▼                    ▼                    ▼
+        MONEY INTELLIGENCE   SECURITY LAYER       ACTION LAYER
+             │                    │                    │
+       Health · Goals       Identity · Policy     Future workflows
+       Simulator · Risk     Consent · Scam        Payments · Bills
+             │                    │                    │
+             └────────────┬───────┘                    │
+                          ▼                            │
+                   T3N AGENT IDENTITY                 │
+                          │                            │
+                    T3N TEE / POLICY  ← planned       │
+                          │                            │
+                    Protected proof ──────────────────┘
 ```
 
-This is a product/security demonstration, **not financial advice**.
+The current app uses the T3N SDK server-side for testnet authentication. The deeper TEE-backed policy boundary is intentionally separated so privileged secrets never reach browser JavaScript.
 
-## T3N ADK integration
+## Current decision engine
 
-Terminal 3's ADK provides an authenticated agent session and a `did:t3n` identity. This project uses the T3N SDK server-side so the API key never reaches the browser.
+Four illustrative checks are evaluated server-side:
 
-The live path is:
+1. Safe-spend limit
+2. Commitment ratio
+3. Emergency-fund protection
+4. Purchase category risk
 
-```text
-User
-  │
-  │ purchase request + selective financial attributes
-  ▼
-AI Money Guardian
-  │
-  ├── affordability policy
-  │
-  ├── T3nClient.handshake()
-  │
-  ├── T3nClient.authenticate()
-  │        │
-  │        └── did:t3n agent identity
-  │
-  └── audit event
-```
+Results are **APPROVED**, **CAUTION** or **DENIED** with explainable checks and audit metadata.
 
-Terminal 3 documents that the ADK authenticates an agent with an Ethereum wallet, opens an encrypted channel to the TEE node, and returns the tenant DID from the authenticated session. It also supports TEE contracts and `executeAndDecode()` for protected contract execution. See the official documentation for the current API surface.
+These rules are illustrative personal-finance planning logic, **not professional financial advice**.
 
-## Current implementation
+## T3N integration
 
-### Working now
+With a testnet key configured, the server performs the T3N handshake, authenticates the agent, receives a `did:t3n` identity and verifies it against `T3N_DID` when supplied. The T3N API key remains server-side.
 
-- Privacy-first spending decision UI
-- Selective-disclosure financial profile
-- Deterministic affordability policy
-- T3N testnet authentication when `T3N_API_KEY` is configured
-- `did:t3n` identity displayed in the audit panel
-- Timestamped demo audit event
-- Responsive single-page interface
+## Public-launch roadmap
 
-### Next T3N layer
+### Phase 1 — Personal finance intelligence
+- Manual financial profile
+- Purchase Guardian
+- Money Health
+- Savings Goals
+- Life Simulator
+- Scam Guard
 
-The architecture intentionally leaves a clean boundary for a TEE-backed policy contract:
+### Phase 2 — Private data ingestion
+- CSV / statement import
+- Transaction categorization
+- Recurring-payment detection
+- Cash-flow forecasting
+- User-controlled private vault
 
-```text
-Browser
-  → server-side agent
-  → T3N authenticated session
-  → T3N TEE policy contract
-  → APPROVED / DENIED
-```
+### Phase 3 — Agent security
+- Verifiable agent identity
+- Permission scopes
+- Consent management
+- Policy-controlled actions
+- Protected computation
+- Tamper-evident audit trail
 
-A future contract can enforce the affordability rule inside T3N so that even a compromised or prompt-injected AI layer cannot override the policy.
+### Phase 4 — Autonomous workflows
+- Bill preparation
+- Subscription management
+- Savings automation
+- Payment preparation
+- User approval gates
+- Policy-enforced execution
+
+Real financial-account connectivity should only be introduced after appropriate security, privacy, compliance and provider-integration review.
 
 ## Run locally
 
-### Requirements
-
-- Node.js 18+
-- A Terminal 3 testnet API key for live T3N identity
-
-### Install
-
 ```bash
 npm install
-```
-
-### Configure
-
-Copy `.env.example` to `.env` and add your T3N key:
-
-```bash
-T3N_API_KEY=your_testnet_key
-```
-
-If no key is configured, the app still runs in **demo mode** and clearly labels the T3N identity as a demo identity.
-
-### Start
-
-```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Copy `.env.example` to `.env` for live T3N authentication. Never commit `.env` or a real API key.
 
-## Security notes
+Without a key, the app runs in clearly labelled demo mode.
 
-- Never commit `T3N_API_KEY`.
-- The T3N key is read server-side only.
-- The browser sends only derived financial attributes in this prototype.
-- Do not use real bank-account or identity data in the hackathon demo.
-- The affordability policy is illustrative and should not be presented as professional financial advice.
+## Security principles
 
-## Hackathon challenge mapping
+- Secrets stay server-side.
+- `.env` is ignored by Git.
+- Request bodies are size-limited.
+- Purchase values are validated server-side.
+- T3N identity can be checked against an expected DID.
+- No real bank credentials should be used in development.
+- Before handling real financial data, add authentication, encryption at rest, consent management, deletion/export controls, rate limiting, monitoring and formal security review.
 
-| Challenge theme | AI Money Guardian |
-|---|---|
-| Verifiable agent identity | Live `did:t3n` authentication |
-| Privacy-preserving workflows | Selective disclosure of affordability attributes |
-| Secure agent actions | Spending decision behind a policy boundary |
-| Auditable actions | Timestamped decision + agent identity |
-| TEE / protected execution | Designed for a T3N policy contract in the next layer |
+## Status
 
-## 3-minute demo script
+**Public product foundation / early alpha.**
 
-**0:00 — Hook**
-
-> “Would you give an AI your salary and bank account just to ask if you can afford an iPhone?”
-
-**0:15 — Explain**
-
-Show the three shared attributes and the hidden fields.
-
-> “The Guardian doesn't need my raw financial data. It only needs the attributes required to make this decision.”
-
-**0:35 — Deny**
-
-Enter `RM4,999` for an iPhone.
-
-> “The Guardian denies it because RM4,999 is above my RM1,200 safe-spend limit.”
-
-**1:15 — Privacy**
-
-Point to the hidden exact salary, bank account, and transaction history.
-
-> “Those never need to be disclosed to the decision layer.”
-
-**1:35 — Approve**
-
-Enter `RM500` for headphones.
-
-> “Same financial profile. Different purchase. Approved.”
-
-**2:00 — T3N identity**
-
-Show the `did:t3n` identity and audit event.
-
-> “The agent itself is authenticated by T3N, so this isn't just an anonymous script making the decision.”
-
-**2:25 — Close**
-
-> “AI Money Guardian is a bouncer for your wallet: it can say yes or no without needing to know everything about you.”
-
-## References
-
-- Terminal 3 Agent Developer Kit: https://terminal3.io/products/agent-developer-kit
-- Terminal 3 ADK documentation: https://docs.terminal3.io/developers/adk/overview/what-is-adk
-- Terminal 3 Quickstart: https://docs.terminal3.io/developers/adk/get-started/quickstart
+The current release is deliberately honest about what is implemented today versus what belongs in the production TEE and financial-connectivity layers.
 
 ## License
 
