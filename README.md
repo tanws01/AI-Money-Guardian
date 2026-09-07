@@ -2,104 +2,157 @@
 
 > **Your money. Your rules. Your AI.**
 
-AI Money Guardian is a privacy-first financial agent designed to become a **trust layer between people, AI agents and money**.
+AI Money Guardian is evolving from a spending checker into a **personal financial intelligence and trust layer** between people, AI agents and money.
 
-It starts with “Can I afford this?” and expands into money health, goals, life-decision simulation, scam detection and financial-agent security.
+The product loop is:
 
-## Product modules
+**Import → Understand → Model → Ask → Monitor → Decide → Protect → Act**
 
-- ✦ **Guardian Desk** — explainable purchase decisions.
-- ◉ **Money Health** — financial health and spending pressure.
-- ◎ **Goal Engine** — turn savings goals into monthly plans.
-- ◇ **Life Simulator** — explore moving out, buying a car, holidays and career decisions.
-- 🛡 **Security Center** — agent identity, permissions and action boundaries.
+## What exists now
+
+- ✦ **Financial Intelligence Hub** — import a CSV bank statement and derive cashflow, spending categories, net cashflow, savings rate, recurring-spend estimates and a financial-health score.
+- ◈ **Natural-language Money Q&A** — ask questions such as “Where am I spending the most?” or “Can I save RM1,000 a month?” and receive model-backed answers with confidence/evidence metadata.
+- 🛡 **Guardian Desk** — explainable purchase decisions with safe-spend, commitment, emergency-buffer and category-risk checks.
+- ◉ **Money Health** — a living view of income, expenses, surplus and runway.
+- ◎ **Goal Engine** — goal-aware financial planning foundation.
+- ◇ **Life Simulator** — stress-test major life decisions.
 - 🚨 **Scam Guard** — detect social-engineering signals in suspicious messages.
-- 📜 **Auditability** — timestamped decision and agent metadata.
-- 🔐 **Selective disclosure** — use derived attributes instead of exposing raw financial records where possible.
+- 🔐 **Agent Control** — verifiable T3N identity, explicit permissions and blocked sensitive actions.
+- 📜 **Auditability** — every decision/action response receives an audit identifier and agent metadata.
+- 🧬 **Privacy boundary** — raw statement records can be processed to create a derived model; the demo does not persist uploaded statement files.
 
-## Product principle
+## The product thesis
 
 **An AI should not need to know everything about you to help protect your money.**
 
-The current prototype uses derived attributes such as income band, commitment ratio, safe-spend limit and emergency-fund target. It deliberately keeps exact salary, bank-account details, raw transaction history and identity numbers outside the decision payload.
-
-This is a privacy/product architecture principle, not a claim that every future feature can operate without underlying financial data.
+Guardian separates the **private financial model** from the **decision layer**. The long-term architecture is designed so an agent can prove facts such as “commitments are below policy threshold” or “this purchase would break my emergency-fund rule” without unnecessarily exposing a user's full financial history.
 
 ## Architecture
 
 ```text
                          AI MONEY GUARDIAN
                                   │
-             ┌────────────────────┼────────────────────┐
-             │                    │                    │
-             ▼                    ▼                    ▼
-        MONEY INTELLIGENCE   SECURITY LAYER       ACTION LAYER
-             │                    │                    │
-       Health · Goals       Identity · Policy     Future workflows
-       Simulator · Risk     Consent · Scam        Payments · Bills
-             │                    │                    │
-             └────────────┬───────┘                    │
-                          ▼                            │
-                   T3N AGENT IDENTITY                 │
-                          │                            │
-                    T3N TEE / POLICY  ← planned       │
-                          │                            │
-                    Protected proof ──────────────────┘
+       ┌──────────────────────────┼──────────────────────────┐
+       │                          │                          │
+       ▼                          ▼                          ▼
+ PRIVATE MONEY MODEL         GUARDIAN REASONING          AGENT CONTROL
+       │                          │                          │
+ Transactions              Natural language             T3N identity
+ Categories                 Decisions                    Consent
+ Cashflow                   Goals                        Permissions
+ Recurring spend            Simulations                  Audit
+ Forecasts                  Risk                         Policy
+       │                          │                          │
+       └───────────────┬──────────┴───────────┬──────────────┘
+                       ▼                      ▼
+                DERIVED ATTRIBUTES       PROTECTED ACTIONS
+                       │                      │
+                       └──────── T3N ────────┘
+                         identity / policy /
+                       future TEE workflows
 ```
 
-The current app uses the T3N SDK server-side for testnet authentication. The deeper TEE-backed policy boundary is intentionally separated so privileged secrets never reach browser JavaScript.
+## Privacy model
 
-## Current decision engine
+### Current alpha
 
-Four illustrative checks are evaluated server-side:
+- CSV is selected and parsed in the browser.
+- Parsed transactions are sent to the local server to calculate a financial model.
+- The demo server does not write uploaded statements to persistent storage.
+- Browser local storage can retain the parsed demo model for convenience; users should clear it before using sensitive data.
+- T3N API credentials stay server-side.
 
-1. Safe-spend limit
-2. Commitment ratio
-3. Emergency-fund protection
-4. Purchase category risk
+### Production direction
 
-Results are **APPROVED**, **CAUTION** or **DENIED** with explainable checks and audit metadata.
+A real release should move the private model into authenticated, encrypted storage and/or a protected computation environment, with explicit consent scopes, deletion/export controls, data minimization, key management and security review.
 
-These rules are illustrative personal-finance planning logic, **not professional financial advice**.
+## Intelligence roadmap
+
+### Layer 1 — Financial understanding
+- CSV / bank-statement ingestion
+- Transaction normalization
+- Merchant/category classification
+- Income and expense detection
+- Recurring-payment detection
+- Cashflow model
+- Savings-rate model
+- Emergency runway
+- Spending concentration
+
+### Layer 2 — Financial reasoning
+- Natural-language Q&A
+- Affordability decisions
+- Goal-aware recommendations
+- Scenario simulation
+- Cashflow forecasting
+- “What changed?” explanations
+- “What should I do next?” planning
+- Confidence and evidence display
+
+### Layer 3 — Continuous Guardian
+- New-transaction monitoring
+- Unusual-spend alerts
+- Subscription creep detection
+- Budget-boundary alerts
+- Emergency-buffer protection
+- Goal drift detection
+- Upcoming-bill awareness
+- Monthly financial reviews
+
+### Layer 4 — Security Guardian
+- Verifiable agent identity
+- Capability-scoped permissions
+- User consent receipts
+- Policy engine
+- Human approval gates
+- Protected secrets
+- Tamper-evident audit records
+- Agent-to-agent trust
+
+### Layer 5 — Autonomous money workflows
+- Prepare bills for approval
+- Prepare savings transfers
+- Subscription cancellation workflows
+- Payment-intent preparation
+- Renewal reminders
+- Negotiation/recommendation workflows
+- Multi-step financial tasks with explicit approval checkpoints
+
+**Important:** the current `/api/action` is intentionally a permission gate/demo. It does not execute real payments. Production execution requires provider integration, strong authentication, transaction signing, policy enforcement, risk controls and independent security/compliance review.
 
 ## T3N integration
 
-With a testnet key configured, the server performs the T3N handshake, authenticates the agent, receives a `did:t3n` identity and verifies it against `T3N_DID` when supplied. The T3N API key remains server-side.
+The server uses the Terminal 3 T3N SDK for testnet agent authentication. When configured, it performs a handshake, authenticates the agent and receives a `did:t3n` identity. The expected DID can be checked through `T3N_DID`.
 
-## Public-launch roadmap
+The repository does **not** claim that every current computation is already TEE-protected. Deeper TEE-backed private data maps, protected policy execution and production audit workflows remain part of the next security layer.
 
-### Phase 1 — Personal finance intelligence
-- Manual financial profile
-- Purchase Guardian
-- Money Health
-- Savings Goals
-- Life Simulator
-- Scam Guard
+## Example user journey
 
-### Phase 2 — Private data ingestion
-- CSV / statement import
-- Transaction categorization
-- Recurring-payment detection
-- Cash-flow forecasting
-- User-controlled private vault
-
-### Phase 3 — Agent security
-- Verifiable agent identity
-- Permission scopes
-- Consent management
-- Policy-controlled actions
-- Protected computation
-- Tamper-evident audit trail
-
-### Phase 4 — Autonomous workflows
-- Bill preparation
-- Subscription management
-- Savings automation
-- Payment preparation
-- User approval gates
-- Policy-enforced execution
-
-Real financial-account connectivity should only be introduced after appropriate security, privacy, compliance and provider-integration review.
+```text
+User uploads August statement
+          ↓
+Guardian builds financial model
+          ↓
+Health: 81/100 · Net: RM3,420 · Top spend: food
+          ↓
+User: “Can I afford a RM3,500 Japan trip?”
+          ↓
+Guardian checks cashflow + reserve + goals
+          ↓
+CAUTION: possible, but emergency reserve would fall below target
+          ↓
+User: “What should I change?”
+          ↓
+Guardian identifies food + shopping pressure
+          ↓
+User approves a savings goal
+          ↓
+Agent prepares an action intent
+          ↓
+T3N identity + permission + user consent + policy gate
+          ↓
+Human approval required before sensitive execution
+```
 
 ## Run locally
 
@@ -110,23 +163,24 @@ npm run dev
 
 Copy `.env.example` to `.env` for live T3N authentication. Never commit `.env` or a real API key.
 
-Without a key, the app runs in clearly labelled demo mode.
+Without a key, the product runs in clearly labelled demo mode.
 
 ## Security principles
 
 - Secrets stay server-side.
 - `.env` is ignored by Git.
 - Request bodies are size-limited.
-- Purchase values are validated server-side.
+- Financial inputs are validated server-side.
 - T3N identity can be checked against an expected DID.
+- Sensitive actions are denied by default in the demo.
 - No real bank credentials should be used in development.
-- Before handling real financial data, add authentication, encryption at rest, consent management, deletion/export controls, rate limiting, monitoring and formal security review.
+- Before handling real financial data, add authentication, encryption at rest, consent management, deletion/export controls, rate limiting, monitoring, threat modeling and formal security review.
 
 ## Status
 
 **Public product foundation / early alpha.**
 
-The current release is deliberately honest about what is implemented today versus what belongs in the production TEE and financial-connectivity layers.
+The ambition is bigger than a budgeting dashboard: AI Money Guardian is being built as a **personal financial operating system with a verifiable AI trust boundary**.
 
 ## License
 
