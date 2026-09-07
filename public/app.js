@@ -1,9 +1,9 @@
 const $ = (id) => document.getElementById(id);
 
 const disclosed = { incomeBand: "RM4k–RM6k", commitmentRatio: 0.40, safeSpendLimit: 1200 };
-let lastDecision = null;
 
 function money(value) { return Number(value).toLocaleString("en-MY"); }
+
 function setPurchase(name, amount, icon = "✦") {
   $("purchaseName").value = name;
   $("purchaseAmount").value = amount;
@@ -13,12 +13,7 @@ function setPurchase(name, amount, icon = "✦") {
 }
 
 function setIdentityUI(data) {
-  const text = $("identityText");
-  if (data?.connected) {
-    text.textContent = "T3N · verified";
-    return;
-  }
-  text.textContent = data?.mode === "demo" ? "T3N · demo" : "T3N · offline";
+  $("identityText").textContent = data?.connected ? "T3N · verified" : data?.mode === "demo" ? "T3N · demo" : "T3N · offline";
 }
 
 async function checkIdentity() {
@@ -35,11 +30,10 @@ async function checkIdentity() {
 
 for (const button of document.querySelectorAll(".examples button, .suggestions button")) {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".examples button").forEach((b) => b.classList.remove("selected"));
-    if (button.classList.contains("examples")) button.classList.add("selected");
-    else document.querySelectorAll(".examples button").forEach((b) => {
-      if (b.dataset.name === button.dataset.name && b.dataset.amount === button.dataset.amount) b.classList.add("selected");
-    });
+    if (button.parentElement?.classList.contains("examples")) {
+      document.querySelectorAll(".examples button").forEach((b) => b.classList.remove("selected"));
+      button.classList.add("selected");
+    }
     setPurchase(button.dataset.name, Number(button.dataset.amount), button.dataset.icon ?? "✦");
   });
 }
@@ -74,7 +68,6 @@ function renderChecks(checks) {
 }
 
 function renderResult(data) {
-  lastDecision = data;
   const approved = data.decision === "APPROVED";
   const result = $("result");
   result.classList.remove("hidden", "approved");
@@ -104,8 +97,6 @@ $("decide").addEventListener("click", async () => {
   button.disabled = true;
   result.classList.add("hidden");
   checking.classList.remove("hidden");
-  $("checkingTitle").textContent = "Verifying your request…";
-  $("checkingText").textContent = "Checking agent identity, privacy boundary and affordability policy.";
 
   try {
     const response = await fetch("/api/decide", {
@@ -116,6 +107,8 @@ $("decide").addEventListener("click", async () => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Decision failed");
 
+    $("checkingTitle").textContent = "Guardian verified the request.";
+    $("checkingText").textContent = "Policy evaluated. Preparing your decision and audit proof.";
     await new Promise((resolve) => setTimeout(resolve, 450));
     checking.classList.add("hidden");
     renderResult(data);
