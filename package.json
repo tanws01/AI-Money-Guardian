@@ -1,6 +1,6 @@
 {
   "name": "ai-money-guardian",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Privacy-first AI spending guardian built with Terminal 3 T3N ADK.",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@terminal3/t3n-sdk": "^5.10.0",
+    "dotenv": "^16.4.7",
     "tsx": "^4.20.5"
   }
 }
