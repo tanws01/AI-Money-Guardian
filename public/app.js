@@ -1,62 +1,51 @@
 const $ = (id) => document.getElementById(id);
-const state = { profile: { incomeBand: "RM5k–RM7k", monthlyIncome: 6500, monthlyCommitments: 2500, savings: 15000, emergencyFundTarget: 7500, safeSpendLimit: 1200 }, category: "shopping" };
-const money = (v) => Number(v || 0).toLocaleString("en-MY");
+const state = { transactions: [], model: null, category: "shopping", profile: { incomeBand:"RM5k–RM7k", monthlyIncome:6500, monthlyCommitments:2500, savings:15000, emergencyFundTarget:7500, safeSpendLimit:1200 } };
+const money = (v) => `RM${Math.round(Number(v||0)).toLocaleString("en-MY")}`;
 
-function setPurchase(name, amount, category = "shopping", icon = "✦") {
-  $("purchaseName").value = name; $("purchaseAmount").value = amount; state.category = category;
-  $("purchaseIcon").textContent = icon;
-}
+function switchTab(id){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active-view",v.id===id));$(id)?.scrollIntoView({behavior:"smooth",block:"start"});}
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 
-function setIdentity(data) {
-  $("identityText").textContent = data?.connected ? "T3N · verified" : data?.mode === "demo" ? "T3N · demo" : "T3N · offline";
-  if (data?.did) $("securityDid").textContent = data.did;
-}
-async function checkIdentity() { try { const r = await fetch("/api/t3/identity"); const d = await r.json(); setIdentity(d); return d; } catch { setIdentity({ mode: "offline" }); return {}; } }
+document.querySelectorAll(".chips button").forEach(b=>b.addEventListener("click",()=>{ $("purchaseName").value=b.dataset.name;$("purchaseAmount").value=b.dataset.amount;state.category=b.dataset.category; }));
 
-function switchTab(id) {
-  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
-  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active-view", v.id === id));
-  $(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+const demoTransactions=[
+ {date:"2026-08-01",description:"Salary Payroll",amount:6500,type:"income"},
+ {date:"2026-08-02",description:"Rent",amount:1400,type:"expense"},
+ {date:"2026-08-03",description:"Groceries AEON",amount:420,type:"expense"},
+ {date:"2026-08-04",description:"Grab Food",amount:180,type:"expense"},
+ {date:"2026-08-05",description:"Spotify Subscription",amount:16,type:"expense"},
+ {date:"2026-08-06",description:"Petrol Shell",amount:220,type:"expense"},
+ {date:"2026-08-08",description:"Shopee Shopping",amount:360,type:"expense"},
+ {date:"2026-08-10",description:"Insurance",amount:250,type:"expense"},
+ {date:"2026-08-12",description:"Restaurant",amount:140,type:"expense"},
+ {date:"2026-08-15",description:"Grab",amount:90,type:"expense"},
+ {date:"2026-08-18",description:"Groceries Lotus",amount:310,type:"expense"},
+ {date:"2026-08-20",description:"Netflix Subscription",amount:55,type:"expense"},
+ {date:"2026-08-22",description:"Shopping Uniqlo",amount:210,type:"expense"},
+ {date:"2026-08-25",description:"Car Loan",amount:750,type:"expense"},
+ {date:"2026-08-27",description:"Cafe",amount:65,type:"expense"}
+];
 
-document.querySelectorAll(".chips button").forEach((b) => b.addEventListener("click", () => setPurchase(b.dataset.name, Number(b.dataset.amount), b.dataset.category)));
-$("purchaseAmount").addEventListener("input", () => {});
+function parseCSV(text){const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(lines.length<2)throw new Error("CSV needs a header row and at least one transaction.");const header=lines[0].split(",").map(x=>x.trim().toLowerCase());const idx=(names)=>names.map(n=>header.indexOf(n)).find(i=>i>=0);const di=idx(["date","transaction date"]),xi=idx(["description","details","merchant","narration"]),ai=idx(["amount","value"]),ti=idx(["type","transaction type","direction"]);if(xi<0||ai<0)throw new Error("CSV needs description and amount columns.");return lines.slice(1).map(line=>{const c=line.split(",").map(x=>x.trim().replace(/^"|"$/g,""));let amount=Number((c[ai]||"").replace(/RM|,/gi,""));let type=(ti>=0?(c[ti]||"").toLowerCase():"");if(!type)type=amount>=0?"expense":"income";if(type.includes("credit")||type.includes("income")||type.includes("deposit"))type="income";else type="expense";return{date:di>=0?c[di]:"",description:c[xi]||"Unknown",amount:Math.abs(amount),type};}).filter(t=>Number.isFinite(t.amount));}
 
-function renderChecks(checks) {
-  const host = $("checks"); host.replaceChildren(); let passed = 0;
-  checks.forEach((c) => { if (c.passed) passed++; const row = document.createElement("div"); row.className = "check-row"; row.innerHTML = `<span class="check-dot ${c.passed ? "pass" : "fail"}">${c.passed ? "✓" : "×"}</span><div><b>${c.label}</b><small>${c.detail}</small></div><strong class="${c.passed ? "pass" : "fail"}">${c.passed ? "PASSED" : "FAILED"}</strong>`; host.append(row); });
-  $("ruleCount").textContent = `${passed} / ${checks.length} passed`;
-}
-function renderResult(data) {
-  const approved = data.decision === "APPROVED", caution = data.decision === "CAUTION";
-  $("result").classList.remove("hidden"); $("result").classList.toggle("approved", approved); $("result").classList.toggle("caution", caution);
-  $("decisionTitle").textContent = approved ? "You can buy this." : caution ? "Proceed with caution." : "Keep your wallet closed.";
-  $("decisionSummary").textContent = data.summary;
-  $("decisionBadge").textContent = data.decision; $("decisionBadge").className = `badge ${approved ? "approved" : caution ? "caution" : "denied"}`;
-  renderChecks(data.checks);
-  $("insightList").replaceChildren(...data.insights.map((x) => { const p = document.createElement("p"); p.textContent = "→ " + x; return p; }));
-  $("auditId").textContent = data.audit.id; $("agentId").textContent = data.audit.agentIdentity; $("network").textContent = data.audit.t3n?.network?.toUpperCase() ?? "DEMO";
-  $("auditTime").textContent = new Date(data.audit.timestamp).toLocaleTimeString("en-MY", { hour: "2-digit", minute: "2-digit" });
-  setIdentity(data.audit.t3n); $("result").scrollIntoView({ behavior: "smooth", block: "center" });
-}
+function renderModel(model){state.model=model;$("modelStatus").textContent="READY";$("mHealth").textContent=model.health;$("mIncome").textContent=money(model.income);$("mExpenses").textContent=money(model.expenses);$("mNet").textContent=money(model.net);$("healthBig").innerHTML=`${model.health}<span>/100</span>`;$("healthBar").style.width=`${model.health}%`;$("healthIncome").textContent=money(model.income);$("healthExpenses").textContent=money(model.expenses);$("healthNet").textContent=money(model.net);$("healthRunway").textContent=model.runwayMonths?`${model.runwayMonths.toFixed(1)} mo`:"—";const insights=[];if(model.topCategories[0])insights.push(`<li><b>Top spending</b><span>${model.topCategories[0][0]} · ${money(model.topCategories[0][1])}</span></li>`);if(model.savingsRate<.2)insights.push(`<li><b>⚠ Savings pressure</b><span>Current modeled savings rate is ${Math.round(model.savingsRate*100)}%.</span></li>`);else insights.push(`<li><b class="success">✓ Positive cashflow</b><span>Modeled monthly surplus is ${money(model.net)}.</span></li>`);insights.push(`<li><b>Recurring estimate</b><span>${money(model.recurringEstimate)} across likely recurring categories.</span></li>`);$("modelInsights").innerHTML=insights.join("");$("healthNarrative").textContent=`Guardian modeled ${model.transactionCount} transactions. Your health score is ${model.health}/100 based on cashflow, recurring pressure and savings capacity.`;$("healthAlerts").innerHTML=insights.join("");$("healthScore").textContent=model.health;localStorage.setItem("amg_transactions",JSON.stringify(state.transactions));}
 
-$("decide").addEventListener("click", async () => {
-  const amount = Number($("purchaseAmount").value); if (!Number.isFinite(amount) || amount <= 0) return;
-  $("decide").disabled = true; $("checking").classList.remove("hidden"); $("result").classList.add("hidden");
-  try {
-    const r = await fetch("/api/decide", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ purchaseName: $("purchaseName").value || "Purchase", purchaseAmount: amount, category: state.category, profile: state.profile }) });
-    const data = await r.json(); if (!r.ok) throw new Error(data.error || "Decision failed");
-    await new Promise((x) => setTimeout(x, 500)); $("checking").classList.add("hidden"); renderResult(data);
-  } catch (e) { $("checking").classList.add("hidden"); alert(e.message); } finally { $("decide").disabled = false; }
-});
+async function buildModel(){if(!state.transactions.length){alert("Import a CSV or load the demo statement first.");return;}const r=await fetch("/api/model",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({transactions:state.transactions,openingBalance:state.profile.savings})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Model failed");renderModel(d.model);return d.model;}
 
-$("scanScam").addEventListener("click", () => {
-  const text = $("scamText").value.toLowerCase();
-  const signals = ["pay", "processing fee", "won", "claim", "urgent", "password", "otp", "transfer"].filter((x) => text.includes(x));
-  const risk = Math.min(99, 35 + signals.length * 9);
-  const box = $("scamResult"); box.classList.remove("hidden"); box.innerHTML = `<strong>🚨 HIGH RISK · ${risk}/100</strong><span>${signals.length} social-engineering signals detected: ${signals.join(", ") || "none"}.</span><b>Guardian recommendation: do not send money or credentials until independently verified.</b>`;
-});
+$("statementFile").addEventListener("change",async e=>{const file=e.target.files[0];if(!file)return;try{$("fileStatus").textContent="Reading statement locally…";state.transactions=parseCSV(await file.text());$("fileStatus").textContent=`Loaded ${state.transactions.length} transactions · raw file is not uploaded to persistent storage.`;await buildModel();}catch(err){$("fileStatus").textContent=err.message;}});
+$("demoData").addEventListener("click",async()=>{state.transactions=demoTransactions;$("fileStatus").textContent="Demo statement loaded · 15 transactions";await buildModel();});
 
-document.querySelector(".danger-demo")?.addEventListener("click", () => alert("BLOCKED — this agent does not have payment-execution permission. User authorization and policy approval are required."));
-checkIdentity();
+async function askQuestion(){const q=$("question").value.trim();if(!q)return;const chat=$("chat");const u=document.createElement("div");u.className="bubble user";u.textContent=q;chat.append(u);$("ask").disabled=true;try{const r=await fetch("/api/ask",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({question:q,transactions:state.transactions,profile:state.profile,openingBalance:state.profile.savings})});const d=await r.json();if(!r.ok)throw new Error(d.error);const a=document.createElement("div");a.className="bubble";a.innerHTML=`<b>Guardian</b><br>${d.answer}`;chat.append(a);$("answerMeta").textContent=`Confidence ${Math.round(d.confidence*100)}% · Evidence: ${d.evidence.join(", ")} · Raw records stored: no`;$("question").value="";}catch(e){alert(e.message);}finally{$("ask").disabled=false;}}
+$("ask").addEventListener("click",askQuestion);$("question").addEventListener("keydown",e=>{if(e.key==="Enter")askQuestion();});
+
+function renderChecks(checks){const host=$("checks");host.replaceChildren();let passed=0;checks.forEach(c=>{if(c.passed)passed++;const row=document.createElement("div");row.className="check-row";row.innerHTML=`<span class="check-dot ${c.passed?"pass":"fail"}">${c.passed?"✓":"×"}</span><div><b>${c.label}</b><small>${c.detail}</small></div><strong class="${c.passed?"pass":"fail"}">${c.passed?"PASSED":"FAILED"}</strong>`;host.append(row);});$("ruleCount").textContent=`${passed} / ${checks.length} passed`;}
+async function runDecision(){const amount=Number($("purchaseAmount").value);if(!Number.isFinite(amount)||amount<=0)return;$("decide").disabled=true;try{const r=await fetch("/api/decide",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({purchaseName:$("purchaseName").value||"Purchase",purchaseAmount:amount,category:state.category,profile:state.profile})});const d=await r.json();if(!r.ok)throw new Error(d.error);const approved=d.decision==="APPROVED",caution=d.decision==="CAUTION";$("result").classList.remove("hidden");$("decisionTitle").textContent=approved?"You can buy this.":caution?"Proceed with caution.":"Keep your wallet closed.";$("decisionSummary").textContent=d.summary;$("decisionBadge").textContent=d.decision;$("decisionBadge").className=`badge ${approved?"approved":caution?"caution":"denied"}`;renderChecks(d.checks);$("insightList").replaceChildren(...d.insights.map(x=>{const p=document.createElement("p");p.textContent="→ "+x;return p;}));$("auditId").textContent=d.audit.id;$("agentId").textContent=d.audit.agentIdentity;$("network").textContent=d.audit.t3n?.network?.toUpperCase()??"DEMO";$("auditTime").textContent=new Date(d.audit.timestamp).toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"});$("result").scrollIntoView({behavior:"smooth",block:"center"});}catch(e){alert(e.message);}finally{$("decide").disabled=false;}}
+$("decide").addEventListener("click",runDecision);
+
+async function identity(){try{const r=await fetch("/api/t3/identity");const d=await r.json();$("identityText").textContent=d.connected?"T3N · verified":d.mode==="demo"?"T3N · demo":"T3N · offline";if(d.did)$("securityDid").textContent=d.did;}catch{$("identityText").textContent="T3N · offline";}}
+
+$("scanScam").addEventListener("click",()=>{const text=$("scamText").value.toLowerCase();const signals=["pay","processing fee","won","claim","urgent","password","otp","transfer","verify","account"].filter(x=>text.includes(x));const risk=Math.min(99,25+signals.length*8);$("scamResult").classList.remove("hidden");$("scamResult").innerHTML=`<strong>🚨 ${risk>=65?"HIGH":"ELEVATED"} RISK · ${risk}/100</strong><span>${signals.length} social-engineering signals: ${signals.join(", ")||"none"}.</span><b>Guardian: independently verify the sender and never share OTPs or send a fee to unlock a prize.</b>`;});
+
+async function action(action,amount=0){try{const r=await fetch("/api/action",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action,amount})});const d=await r.json();$("actionResult").innerHTML=`<span class="${d.allowed?"success":"danger"}">${d.allowed?"ALLOWED":"BLOCKED"}</span> · ${d.reason} · Audit ${d.audit.id}`;}catch(e){$("actionResult").textContent=e.message;}}
+$("prepareAction").addEventListener("click",()=>action("payment_intent",500));$("transferAction").addEventListener("click",()=>action("transfer",500));
+
+(async()=>{try{const saved=JSON.parse(localStorage.getItem("amg_transactions")||"null");if(Array.isArray(saved)&&saved.length){state.transactions=saved;await buildModel();}}catch{}identity();})();
