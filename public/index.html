@@ -3,72 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Money Guardian</title>
+  <meta name="theme-color" content="#08090a" />
+  <title>AI Money Guardian — Your money needs a bouncer.</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
   <main class="shell">
-    <nav>
-      <div class="brand"><span class="shield">◆</span> AI Money Guardian</div>
-      <div class="nav-pill">T3N ADK · Privacy-first</div>
+    <nav class="nav">
+      <a class="brand" href="/" aria-label="AI Money Guardian home">
+        <span class="brand-mark">✦</span>
+        <span>AI Money Guardian</span>
+      </a>
+      <div class="nav-right">
+        <span class="secure-pill"><span class="live-dot"></span> Privacy-first</span>
+        <button id="identityButton" class="identity-pill" type="button">
+          <span class="identity-icon">◈</span>
+          <span id="identityText">T3N · checking</span>
+        </button>
+      </div>
     </nav>
 
     <section class="hero">
-      <div class="eyebrow">YOUR MONEY DOESN'T NEED ANOTHER BUDGETING APP.</div>
-      <h1>It needs a <span>bouncer.</span></h1>
-      <p>Ask whether you can afford something. The Guardian makes the decision using only the financial attributes it actually needs — not your raw salary, bank account, or transaction history.</p>
+      <div class="hero-copy">
+        <div class="eyebrow"><span>01</span> AI FINANCIAL GUARDIAN</div>
+        <h1>Your money doesn't need another <em>budgeting app.</em></h1>
+        <div class="hero-bottom">
+          <p>It needs a <strong>bouncer.</strong> Ask before you spend. The Guardian checks affordability using only the financial attributes it actually needs — never your raw salary, bank account, or transaction history.</p>
+          <div class="hero-proof">
+            <span>🔐</span>
+            <div><strong>Proof, not your data.</strong><small>Selective disclosure powered by a verifiable agent.</small></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="grid">
-      <article class="card ask-card">
-        <div class="card-head">
-          <div><small>01 · REQUEST</small><h2>Can I afford this?</h2></div>
-          <span class="status-dot"></span>
+    <section class="trust-bar">
+      <div><span class="trust-icon">✓</span><div><strong>Verified agent</strong><small>T3N identity</small></div></div>
+      <div><span class="trust-icon">◉</span><div><strong>Selective disclosure</strong><small>3 attributes only</small></div></div>
+      <div><span class="trust-icon">⌁</span><div><strong>Policy controlled</strong><small>Explainable rules</small></div></div>
+      <div><span class="trust-icon">▤</span><div><strong>Auditable</strong><small>Every decision</small></div></div>
+    </section>
+
+    <section class="workspace">
+      <article class="card purchase-card">
+        <div class="section-top">
+          <div><span class="step">02 · ASK</span><h2>Can I afford this?</h2></div>
+          <span class="guardian-status"><i></i> Guardian ready</span>
         </div>
-        <label>What are you buying?</label>
-        <input id="purchaseName" value="iPhone 17 Pro" />
-        <label>Purchase amount</label>
-        <div class="amount-input"><span>RM</span><input id="purchaseAmount" type="number" value="4999" min="1" /></div>
+
+        <div class="purchase-preview">
+          <div class="purchase-icon" id="purchaseIcon"></div>
+          <div><small>YOUR PURCHASE</small><strong id="previewName">iPhone 17 Pro</strong></div>
+          <div class="preview-price">RM<span id="previewAmount">4,999</span></div>
+        </div>
+
+        <label for="purchaseName">What are you buying?</label>
+        <input id="purchaseName" value="iPhone 17 Pro" autocomplete="off" />
+
+        <label for="purchaseAmount">Purchase amount</label>
+        <div class="amount-input"><span>RM</span><input id="purchaseAmount" type="number" value="4999" min="1" step="1" /></div>
+
+        <div class="quick-label">QUICK CHECKS</div>
         <div class="examples">
-          <button data-name="iPhone 17 Pro" data-amount="4999">RM4,999 iPhone</button>
-          <button data-name="Headphones" data-amount="500">RM500 headphones</button>
-          <button data-name="Dinner" data-amount="80">RM80 dinner</button>
+          <button class="selected" data-name="iPhone 17 Pro" data-amount="4999" data-icon="">🍎 iPhone · RM4,999</button>
+          <button data-name="Headphones" data-amount="500" data-icon="◉">🎧 Headphones · RM500</button>
+          <button data-name="Dinner" data-amount="80" data-icon="✦">🍜 Dinner · RM80</button>
+          <button data-name="Weekend trip" data-amount="900" data-icon="✈">✈️ Trip · RM900</button>
         </div>
-        <button id="decide" class="primary">Ask the Guardian <span>→</span></button>
+
+        <button id="decide" class="primary-button" type="button">
+          <span class="button-shield">✦</span><span>Ask the Guardian</span><span class="arrow">→</span>
+        </button>
+        <p class="micro-copy">The Guardian will evaluate the purchase against your disclosed policy.</p>
       </article>
 
-      <article class="card profile-card">
-        <div class="card-head"><div><small>02 · SELECTIVE DISCLOSURE</small><h2>What the agent sees</h2></div></div>
-        <p class="muted">The user shares attributes, not raw financial records.</p>
-        <div class="attribute"><span>Income band</span><strong>RM4k–RM6k</strong><i>shared</i></div>
-        <div class="attribute"><span>Commitment ratio</span><strong>40%</strong><i>shared</i></div>
-        <div class="attribute"><span>Safe-spend limit</span><strong>RM1,200</strong><i>shared</i></div>
-        <div class="attribute withheld"><span>Exact salary</span><strong>••••••</strong><i>hidden</i></div>
-        <div class="attribute withheld"><span>Bank account</span><strong>••••••</strong><i>hidden</i></div>
-        <div class="attribute withheld"><span>Transaction history</span><strong>••••••</strong><i>hidden</i></div>
+      <article class="card privacy-card">
+        <div class="section-top">
+          <div><span class="step">03 · SELECTIVE DISCLOSURE</span><h2>What the agent sees</h2></div>
+          <span class="lock-badge">🔒 PRIVATE</span>
+        </div>
+        <p class="card-intro">Your financial profile is reduced to the minimum proof needed for the decision.</p>
+
+        <div class="data-group-title"><span class="green-line"></span> SHARED WITH GUARDIAN <span>3</span></div>
+        <div class="data-row shared"><span class="data-symbol">◉</span><div><strong>Income band</strong><small>Approximate earning range</small></div><b>RM4k–RM6k</b><i>SHARED</i></div>
+        <div class="data-row shared"><span class="data-symbol">◒</span><div><strong>Commitment ratio</strong><small>Monthly commitments / income</small></div><b>40%</b><i>SHARED</i></div>
+        <div class="data-row shared"><span class="data-symbol">⌁</span><div><strong>Safe-spend limit</strong><small>Current discretionary threshold</small></div><b>RM1,200</b><i>SHARED</i></div>
+
+        <div class="data-group-title hidden-title"><span class="grey-line"></span> NEVER SHARED <span>4</span></div>
+        <div class="data-row hidden-data"><span class="data-symbol">⊘</span><div><strong>Exact salary</strong><small>Underlying value</small></div><b>••••••</b><i>PROTECTED</i></div>
+        <div class="data-row hidden-data"><span class="data-symbol">⊘</span><div><strong>Bank account</strong><small>Account details</small></div><b>••••••</b><i>PROTECTED</i></div>
+        <div class="data-row hidden-data"><span class="data-symbol">⊘</span><div><strong>Transaction history</strong><small>Raw spending records</small></div><b>••••••</b><i>PROTECTED</i></div>
+        <div class="data-row hidden-data"><span class="data-symbol">⊘</span><div><strong>Identity number</strong><small>Government identifier</small></div><b>••••••</b><i>PROTECTED</i></div>
+
+        <div class="privacy-meter"><div><strong>3 attributes disclosed</strong><small>4 sensitive attributes stay behind the privacy boundary.</small></div><div class="meter"><span></span><span></span><span></span><span class="off"></span><span class="off"></span><span class="off"></span><span class="off"></span></div></div>
       </article>
     </section>
 
-    <section id="result" class="card result-card hidden">
-      <div class="result-main">
-        <div id="decisionBadge" class="decision-badge">DENIED</div>
-        <div><small>GUARDIAN DECISION</small><h2 id="decisionTitle">Purchase blocked</h2><p id="decisionSummary"></p></div>
+    <section id="checking" class="checking-card hidden">
+      <div class="scanner"><span></span></div>
+      <div><span class="step">GUARDIAN CHECK</span><h3 id="checkingTitle">Verifying your request…</h3><p id="checkingText">Checking agent identity, privacy boundary and affordability policy.</p></div>
+      <div class="checking-steps"><span class="done">✓ Identity</span><span class="active">◌ Privacy</span><span>○ Policy</span></div>
+    </section>
+
+    <section id="result" class="result-shell hidden" aria-live="polite">
+      <div class="result-header">
+        <div>
+          <span class="step">04 · GUARDIAN DECISION</span>
+          <div class="decision-line"><div id="decisionIcon" class="decision-icon">×</div><div><h2 id="decisionTitle">Keep your wallet closed.</h2><p id="decisionSummary"></p></div></div>
+        </div>
+        <div id="decisionBadge" class="decision-badge denied">DENIED</div>
       </div>
-      <div id="reasons" class="reasons"></div>
-      <div class="audit-row">
-        <div><small>AUDIT EVENT</small><strong id="auditId">—</strong></div>
-        <div><small>AGENT IDENTITY</small><strong id="agentId">—</strong></div>
-        <div><small>NETWORK</small><strong id="network">T3N TESTNET</strong></div>
+
+      <div class="decision-grid">
+        <div class="checks-panel">
+          <div class="panel-title"><span>WHY?</span><small id="ruleCount">1 / 2 rules passed</small></div>
+          <div id="checks"></div>
+          <div class="policy-note"><span>🛡️</span><div><strong>Policy, not vibes.</strong><small>The Guardian applies the same disclosed rules every time.</small></div></div>
+        </div>
+        <div class="privacy-proof">
+          <div class="panel-title"><span>WHAT DID THE AI SEE?</span><small>Privacy proof</small></div>
+          <div class="proof-grid">
+            <div class="proof-column"><span class="proof-heading shared-heading">✓ SHARED</span><b>Income band</b><b>Commitment ratio</b><b>Safe-spend limit</b></div>
+            <div class="proof-column"><span class="proof-heading protected-heading">🔒 HIDDEN</span><b>Exact salary</b><b>Bank account</b><b>Transactions</b><b>Identity number</b></div>
+          </div>
+          <div class="proof-footer"><strong>Decision made without raw financial records.</strong><span>Privacy preserved.</span></div>
+        </div>
+      </div>
+
+      <div class="audit-card">
+        <div class="audit-heading"><span>05 · PROOF OF ACTION</span><span class="verified-label">● VERIFIED EVENT</span></div>
+        <div class="audit-grid">
+          <div><small>AUDIT ID</small><strong id="auditId">—</strong></div>
+          <div><small>AGENT IDENTITY</small><strong id="agentId">—</strong></div>
+          <div><small>NETWORK</small><strong id="network">T3N TESTNET</strong></div>
+          <div><small>TIME</small><strong id="auditTime">—</strong></div>
+        </div>
+      </div>
+
+      <div class="try-again">
+        <div><span class="step">GUARDIAN SAYS</span><h3 id="guardianMessage">Nice try. Your wallet said no. 😌</h3></div>
+        <div class="suggestions"><button data-name="Headphones" data-amount="500" data-icon="◉">Try RM500 headphones →</button><button data-name="Dinner" data-amount="80" data-icon="✦">Try RM80 dinner →</button></div>
       </div>
     </section>
 
-    <section class="privacy-strip">
-      <div><span>✓</span><strong>Privacy boundary</strong><p>Only derived affordability attributes cross the application boundary.</p></div>
-      <div><span>✓</span><strong>Verifiable agent</strong><p>T3N authenticates the agent and returns a <code>did:t3n</code> identity.</p></div>
-      <div><span>✓</span><strong>Auditable decision</strong><p>Every decision gets a timestamped audit event for the demo.</p></div>
+    <section class="closing-grid">
+      <article class="mini-card quote-card"><span class="quote-mark">“</span><h3>Traditional financial AI needs your data to make a decision.</h3><p>Money Guardian only needs <strong>proof</strong>.</p></article>
+      <article class="mini-card architecture-card"><span class="step">THE IDEA</span><h3>AI proposes.<br /><em>T3N verifies.</em><br />Policy decides.</h3><div class="flow"><span>🤖 AI</span><i>→</i><span>◈ T3N</span><i>→</i><span>🛡️ POLICY</span></div></article>
     </section>
 
-    <footer>AI Money Guardian · Hackathon prototype · Financial decisions shown here are illustrative, not financial advice.</footer>
+    <footer>
+      <div><span class="brand-mark">✦</span> AI Money Guardian</div>
+      <span>Hackathon prototype · Illustrative affordability rules · Not financial advice</span>
+    </footer>
   </main>
   <script src="/app.js"></script>
 </body>
