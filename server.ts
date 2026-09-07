@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 const PORT = Number(process.env.PORT ?? 3000);
+const T3N_ENV = process.env.T3N_ENV ?? "testnet";
+const EXPECTED_T3N_DID = process.env.T3N_DID;
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -61,14 +63,19 @@ async function t3Identity() {
   if (!process.env.T3N_API_KEY) {
     return {
       connected: false,
+      authenticated: false,
       mode: "demo",
+      network: T3N_ENV,
       message: "T3N_API_KEY not configured. Decision engine is running in local demo mode.",
     };
   }
 
   try {
     const sdk = await import("@terminal3/t3n-sdk");
-    sdk.setEnvironment("testnet");
+    sdk.setEnvironment(T3N_ENV as any);
+
+    // The API key stays server-side. It is used by the SDK to derive the wallet
+    // address and sign the real T3N authentication challenge.
     const wasmComponent = await sdk.loadWasmComponent();
     const address = sdk.eth_get_address(process.env.T3N_API_KEY);
     const t3n = new sdk.T3nClient({
@@ -77,21 +84,31 @@ async function t3Identity() {
         EthSign: sdk.metamask_sign(address, undefined, process.env.T3N_API_KEY),
       },
     });
+
     await t3n.handshake();
     const did = await t3n.authenticate(sdk.createEthAuthInput(address));
+    const authenticatedDid = did.value;
+    const didMatches = !EXPECTED_T3N_DID || authenticatedDid === EXPECTED_T3N_DID;
 
     return {
-      connected: true,
-      mode: "live",
-      did: did.value,
-      network: "testnet",
+      connected: didMatches,
+      authenticated: true,
+      didMatches,
+      mode: didMatches ? "live" : "identity-mismatch",
+      did: authenticatedDid,
+      expectedDid: EXPECTED_T3N_DID,
+      network: T3N_ENV,
       wallet: address,
-      message: "Agent identity authenticated by T3N.",
+      message: didMatches
+        ? "Agent identity authenticated by T3N."
+        : "T3N authentication succeeded, but the returned DID does not match T3N_DID.",
     };
   } catch (error) {
     return {
       connected: false,
+      authenticated: false,
       mode: "error",
+      network: T3N_ENV,
       message: error instanceof Error ? error.message : "T3N authentication failed.",
     };
   }
@@ -108,7 +125,7 @@ async function handler(req: any, res: any) {
 
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true, app: "AI Money Guardian" }));
+    res.end(JSON.stringify({ ok: true, app: "AI Money Guardian", t3nEnvironment: T3N_ENV }));
     return;
   }
 
