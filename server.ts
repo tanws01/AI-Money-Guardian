@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
@@ -31,26 +32,39 @@ function evaluate(input: DecisionInput) {
   const { purchaseAmount, purchaseName, disclosed } = input;
   const limit = Number(disclosed.safeSpendLimit);
   const ratio = Number(disclosed.commitmentRatio);
-  const reasons: string[] = [];
+  const withinLimit = purchaseAmount <= limit;
+  const healthyCommitments = ratio < 0.6;
+  const approved = withinLimit && healthyCommitments;
 
-  if (purchaseAmount <= limit) {
-    reasons.push(`Purchase is within the disclosed safe-spend limit of RM${limit.toLocaleString()}.`);
-  } else {
-    reasons.push(`Purchase exceeds the disclosed safe-spend limit of RM${limit.toLocaleString()}.`);
-  }
-
-  if (ratio >= 0.6) {
-    reasons.push("Commitment ratio is high, so the guardian applies a stricter affordability rule.");
-  } else {
-    reasons.push("Commitment ratio is within the demo policy range.");
-  }
-
-  const approved = purchaseAmount <= limit && ratio < 0.6;
   return {
     decision: approved ? "APPROVED" : "DENIED",
     purchaseName,
     amount: purchaseAmount,
-    reasons,
+    checks: [
+      {
+        label: "Safe-spend limit",
+        detail: `RM${purchaseAmount.toLocaleString()} ${withinLimit ? "≤" : ">"} RM${limit.toLocaleString()}`,
+        passed: withinLimit,
+      },
+      {
+        label: "Commitment ratio",
+        detail: `${Math.round(ratio * 100)}% < 60%`,
+        passed: healthyCommitments,
+      },
+    ],
+    reasons: approved
+      ? [
+          `RM${purchaseAmount.toLocaleString()} is within your disclosed RM${limit.toLocaleString()} safe-spend limit.`,
+          `Your disclosed commitment ratio of ${Math.round(ratio * 100)}% is within the demo policy range.`,
+        ]
+      : [
+          withinLimit
+            ? `Purchase is within the disclosed RM${limit.toLocaleString()} safe-spend limit.`
+            : `Purchase exceeds the disclosed RM${limit.toLocaleString()} safe-spend limit.`,
+          healthyCommitments
+            ? `Commitment ratio of ${Math.round(ratio * 100)}% is within the demo policy range.`
+            : `Commitment ratio of ${Math.round(ratio * 100)}% is too high for this policy.`,
+        ],
     policy: {
       rule: "purchaseAmount <= safeSpendLimit AND commitmentRatio < 60%",
       safeSpendLimit: limit,
@@ -66,16 +80,13 @@ async function t3Identity() {
       authenticated: false,
       mode: "demo",
       network: T3N_ENV,
-      message: "T3N_API_KEY not configured. Decision engine is running in local demo mode.",
+      message: "T3N_API_KEY not configured. Running in local demo mode.",
     };
   }
 
   try {
     const sdk = await import("@terminal3/t3n-sdk");
     sdk.setEnvironment(T3N_ENV as any);
-
-    // The API key stays server-side. It is used by the SDK to derive the wallet
-    // address and sign the real T3N authentication challenge.
     const wasmComponent = await sdk.loadWasmComponent();
     const address = sdk.eth_get_address(process.env.T3N_API_KEY);
     const t3n = new sdk.T3nClient({
@@ -96,12 +107,11 @@ async function t3Identity() {
       didMatches,
       mode: didMatches ? "live" : "identity-mismatch",
       did: authenticatedDid,
-      expectedDid: EXPECTED_T3N_DID,
       network: T3N_ENV,
       wallet: address,
       message: didMatches
         ? "Agent identity authenticated by T3N."
-        : "T3N authentication succeeded, but the returned DID does not match T3N_DID.",
+        : "Authentication succeeded, but the returned DID does not match T3N_DID.",
     };
   } catch (error) {
     return {
@@ -148,7 +158,7 @@ async function handler(req: any, res: any) {
 
       const result = evaluate({
         purchaseAmount,
-        purchaseName: String(input.purchaseName ?? "Purchase"),
+        purchaseName: String(input.purchaseName ?? "Purchase").slice(0, 80),
         category: String(input.category ?? "other"),
         disclosed: {
           incomeBand: String(disclosed.incomeBand ?? "RM4k–RM6k"),
